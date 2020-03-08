@@ -1,0 +1,328 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{wrapfig}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\usepackage{enumerate}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+%Russian-specific packages
+%--------------------------------------
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian, english]{babel}
+%--------------------------------------
+\usepackage{color} %% это для отображения цвета в коде
+\usepackage{listings} %% собственно, это и есть пакет listings
+\usepackage{caption}
+\DeclareCaptionFont{white}{\color{white}} %% это сделает текст заголовка белым
+%% код ниже нарисует серую рамочку вокруг заголовка кода.
+\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+%--------------------------------------
+\definecolor{lemonchiffon}{rgb}{1.0, 0.98, 0.8}
+\newtcolorbox{mainblock}{colback=lemonchiffon,grow to right by=-10mm,grow to left by=-10mm,
+boxrule=0pt,boxsep=0pt,breakable} % настройки области с изменённым фоном
+
+\definecolor{block-gray}{gray}{0.95} % уровень прозрачности (1 - максимум)
+\newtcolorbox{importantblock}{colback=block-gray,grow to right by=-10mm,grow to left by=-10mm,
+boxrule=0pt,boxsep=0pt,breakable} % настройки области с изменённым фоном
+
+\makeatletter
+\newcommand{\settag}[1]{
+  \tag*{(#1)\qquad}
+  \edef\@currentlabel{\theequation#1}}
+\makeatother
+
+\title{Вычислительная математика \\ Лабораторная работа 1}
+\author{Ярослав Пылаев, гр. 3530904/80001}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+%code stuff---------
+\lstset{
+language=C++,                 % выбор языка для подсветки (здесь это С)
+basicstyle=\footnotesize\sffamily, % размер и начертание шрифта для подсветки кода
+numbers=left,               % где поставить нумерацию строк (слева\справа)
+numberstyle=\tiny,           % размер шрифта для номеров строк
+stepnumber=1,                   % размер шага между двумя номерами строк
+numbersep=5pt,                % как далеко отстоят номера строк от подсвечиваемого кода
+backgroundcolor=\color{white}, % цвет фона подсветки - используем \usepackage{color}
+showspaces=false,            % показывать или нет пробелы специальными отступами
+showstringspaces=false,      % показывать или нет пробелы в строках
+showtabs=false,             % показывать или нет табуляцию в строках
+frame=single,              % рисовать рамку вокруг кода
+tabsize=2,                 % размер табуляции по умолчанию равен 2 пробелам
+captionpos=t,              % позиция заголовка вверху [t] или внизу [b]
+breaklines=true,           % автоматически переносить строки (да\нет)
+breakatwhitespace=false, % переносить строки только если есть пробел
+escapeinside={\%*}{*)}   % если нужно добавить комментарии в коде
+}
+%--------------------------------------
+
+\newpage
+\section{Задание}
+\noindent \textbf{Вариант 14.} Для $1 \le x \le 4$ с $h = 0.375$ вычислить значения
+      \[ f(x) = \int_0^{20} \frac{dz}{e^z(z + x)}, \]
+      используя для вычисления интеграла программу $\verb|QUANC8|$.
+      По полученным точкам построить сплайн-функцию и полином Лагранжа 8-й степени.
+      Сравнить значения обеих аппроксимаций в точках \[ x_k = 1.1875 + 0.375k, \hspace{5mm} (k = 0, 1,\dots, 7).\]
+\subsection{Цель работы}
+\noindent Вычислить значение заданного интеграла и исследовать точность аппроксимирующих функций,
+      полученных
+\begin{itemize}
+  \item сплайн-интерполяцией,
+  \item построением интерполяционного полинома Лагранжа.
+\end{itemize}
+\subsection{Задачи}
+\begin{enumerate}
+  \item Используя программу $\verb|QUANC8|$ определить значение интеграла.
+  \item При помощи программ $\verb|SPLINE|$ и $\verb|SEVAL|$ построить сплайн-функцию.
+  \item Построить интерполяционный полином Лагранжа.
+  \item Сравнить полученные значения в точках $x_k$,
+        дополнительно для определения точности аппроксимаций для этих же точек применив программу $\verb|QUANC8|$.
+\end{enumerate}
+
+\newpage
+\section{Реализация}
+\subsection{QUANC8}
+
+\begin{lstlisting}[label=quanc8,caption=QUANC8]
+const int X_LIMIT_1 = 1;
+const int X_LIMIT_2 = 4;
+const double H = 0.375;
+
+const double A = 0;
+const double B = 20;
+
+int main()
+{
+//other INPUT parameters
+  const double epsabs = 0.0;
+  const double epsrel = 1.0e-10;
+
+//OUTPUT parameters
+  double result = 0.0;
+  double errest = 0.0;
+  int nofun = 0;
+  double posn = 0.0;
+  int flagQuanc = 0;
+
+  const int n = 1 + static_cast<int>(abs(X_LIMIT_1 -
+        - X_LIMIT_2) / H);
+
+  double arrQuancRes[n] = { 0 };
+
+  for (int i = 0; i < n; ++i) {
+    quanc8(fun, A, B, epsabs, epsrel, &result,
+          &errest, &nofun, &posn, &flagQuanc); //QUANC8
+    arrQuancRes[i] = result;
+  }
+  .........................
+\end{lstlisting}
+
+\begin{lstlisting}[label=fun,caption=Подынтегральная функция]
+double fun(double z)
+{
+  double x = X_LIMIT_1;
+  static int i = -1;
+  if (z == A) {
+    x = X_LIMIT_1 + (++i * H); //compute x
+  }
+  else {
+    x = X_LIMIT_1 + (i * H);
+  }
+  return { 1 / (exp(z) * (z + x)) };
+}
+\end{lstlisting}
+
+\subsubsection{Результат}
+\begin{tabular}{ | c | c | c | c | c | c | c | c | c | c | }
+  \hline
+  \footnotesize
+  $x$ & 1 & 1.375 & 1.75 & 2.125 & 2.5 & 2.875 & 3.25 & 3.625 & 4 \\ \hline
+  $f(x)$ & 0.5963 & 0.4774 & 0.3998 & 0.3448 & 0.3035 & 0.2713 & 0.2454 & 0.2241 & 0.2063 \\ \hline
+\end{tabular} \\
+
+$\verb|FLAG QUANC8| = 0$
+
+\subsubsection{Комментарии}
+\noindent Так как подынтегральная функция зависит от двух переменных,
+      то программа $\verb|QUANC8|$ работает относительно переменной $z$,
+      а изменение $x$ учитывается в самой функции
+      (используется статическая переменная для расчета). \\
+
+\noindent Результаты программы являются разумными, потому что при увеличении переменной $x$,
+      находещейся в знаменателе, значение функции уменьшается.
+
+\vspace{5mm}
+\subsection{Сплайн-интерполяция}
+\begin{lstlisting}[label=spline,caption=SPLINE-SEVAL]
+  .........................
+  const int k_min = 0;
+  const int k_max = 7;
+  const int nK = k_max - k_min + 1;
+
+  double arrSplineRes[nK] = { 0 };
+
+  //compute X_k values
+  double arrXKPoints[nK];
+  for (int i = 0; i < nK; ++i) {
+    arrXKPoints[i] = 1.1875 + 0.375 * i;
+  }
+
+  double arrB[nK] = { 0 };
+  double arrC[nK] = { 0 };
+  double arrD[nK] = { 0 };
+
+  int flagSpline = 0;
+  int last = 0;
+
+  spline(n, 1, 1, 1, 1, arrXPoints, arrQuancRes,
+        arrB, arrC, arrD, &flagSpline); //SPLINE
+
+  for (int i = k_min; i < k_max + 1; ++i) {
+    arrSplineRes[i] = seval(n, arrXKPoints[i], arrXPoints,
+          arrQuancRes, arrB, arrC, arrD, &last); //SEVAL
+  }
+  .........................
+\end{lstlisting}
+
+\subsubsection{Результат}
+\begin{tabular}{ | c | c | c | c | c | c | c | c | c | }
+  \hline
+  \footnotesize
+  $x_k$ & 1.1875 & 1.5625 & 1.9375 & 2.3125 & 2.6875 & 3.0625 & 3.4375 & 3.8125 \\ \hline
+  $f(x)$ & 0.5963 & 0.4193 & 0.3744 & 0.3213 & 0.2879 & 0.2531 & 0.2509 & 0.2268 \\ \hline
+\end{tabular} \\
+
+$\verb|FLAG SPLINE| = 0$
+
+\vspace{5mm}
+\subsection{Интерполяционный полином Лагранжа}
+\begin{lstlisting}[label=lagrange,caption=Построение полинома Лагранжа]
+  .........................
+  double arrLagrRes[nK] = { 0 };
+
+  for (int i = k_min; i < k_max + 1; ++i) {
+    arrLagrRes[i] = lagrange(n, arrXPoints, arrQuancRes,
+          nK - 1, arrXKPoints[i]); //LAGRANGE
+  }
+  .........................
+\end{lstlisting}
+
+\begin{lstlisting}[label=lagrange,caption=lagrange.cpp]
+double lagrange(int n, double arrPoints[],
+      double arrFunctions[], int m, double x)
+{
+  if (n < m) {
+    throw std::invalid_argument("There are not enough points");
+  }
+  if (n <= 0) {
+    throw std::invalid_argument("Tables are empty");
+  }
+  //find nodes satisfying the condition of interpolation
+  int h = 0;
+  for (int i = 0; i < n; i++) {
+    if ((arrPoints[i] > x) && (i >= m)) {
+        h = i + 1 - m;
+        break;
+    }
+  }
+  //compute
+  double q = 0.0;
+  for (int i = h; i < h + m; i++) {
+    double p = 1.0;
+    for (int j = h; j < h + m; j++) {
+      if (j != i) {
+        p *= x - arrPoints[j];
+        p /= arrPoints[i] - arrPoints[j];
+      }
+    }
+    p *= arrFunctions[i];
+    q += p;
+  }
+  return q;
+}
+\end{lstlisting}
+
+\subsubsection{Результат}
+\begin{tabular}{ | c | c | c | c | c | c | c | c | c | }
+  \hline
+  \footnotesize
+  $x_k$ & 1.1875 & 1.5625 & 1.9375 & 2.3125 & 2.6875 & 3.0625 & 3.4375 & 3.8125 \\ \hline
+  $f(x)$ & 0.5293 & 0.4350 & 0.3702 & 0.3228 & 0.2864 & 0.2577 & 0.2342 & 0.2148 \\ \hline
+\end{tabular} \\
+\subsubsection{Комментарии}
+\noindent Для построения интерполяционного полинома Лагранжа была использована программа $\verb|lagrange.cpp|$,
+      написанная еще в 3-м семестре в рамках курса по вычислительной математике, которая
+      самостоятельно способна       выбирать наиболее подходящие узлы интерполирования.
+      Даже несмотря на то, что в решаемой задаче выбор узлов не предоставляется (9 точек, требуемая степень - 8),
+      упомянуть о свойстве программы имеет смысл.
+
+\vspace{5mm}
+\subsection{Дополнительные расчеты}
+\begin{lstlisting}[label=quanc8 extra,caption=QUANC8 по точкам $x_k$]
+  .........................
+  for (int i = 0; i < nK; ++i) {
+    quanc8(checkFun, A, B, epsabs, epsrel, &result,
+          &errest, &nofun, &posn, &flagQuanc);
+    arrQuancRes[i] = result;
+  }
+
+  return 0;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[label=fun extra,caption=Функция с расчетом $x_k$]
+double checkFun(double z)
+{
+  double x = 1.1875;
+  static int i = -1;
+  if (z == A) {
+    x = 1.1875 + 0.375 * (++i);
+  }
+  else {
+    x = 1.1875 + 0.375 * i;
+  }
+
+  return { 1 / (exp(z) * (z + x)) };
+}
+\end{lstlisting}
+
+\subsubsection{Результат}
+\begin{tabular}{ | c | c | c | c | c | c | c | c | c | }
+  \hline
+  \footnotesize
+  $x_k$ & 1.1875 & 1.5625 & 1.9375 & 2.3125 & 2.6875 & 3.0625 & 3.4375 & 3.8125 \\ \hline
+  $f(x)$ & 0.5298 & 0.4350 & 0.3702 & 0.3228 & 0.2864 & 0.2577 & 0.2343 & 0.2148 \\ \hline
+\end{tabular} \\
+
+\subsection{Сравнение результатов}
+\begin{tabular}{ | c | c | c |}
+  \hline
+  \footnotesize
+  $x_k$ & $\triangle f(x)_S$ & $\triangle f(x)_L$ \\ \hline
+  1.1875 & -0.0665 & 0.0004 \\ \hline
+  1.5625 & 0.0156 & $-2.8\cdot10^{-5}$ \\ \hline
+  1.9375 & -0.0042 & $6.4\cdot10^{-6}$ \\ \hline
+  2.3125 & 0.0014 & $-3.0\cdot10^{-6}$ \\ \hline
+  2.6875 & -0.0014 & $2.6\cdot10^{-6}$ \\ \hline
+  3.0625 & 0.0045 & $-4.2\cdot10^{-6}$ \\ \hline
+  3.4375 & -0.0166 & $1.4\cdot10^{-5}$ \\ \hline
+  3.8125 & -0.0119 & $-4.8\cdot10^{-6}$ \\ \hline
+\end{tabular} \\
+
+\noindent $\triangle f(x)_{S|L} = f(x)_{Q8} - f(x)_{S|L}$
+
+\vspace{5mm}
+\section{Вывод}
+\noindent Значение заданного интеграла было успешно вычисленно с помощью программы $\verb|QUANC8|$,
+      а в результате сплайн-интерполяции и построения полинома Лагранжа 8-й степени были получены аппроксимации
+      исходной функции, что позволяет исследовать ее поведение. Проанализировав таблицу п. 2.5 "Сравнение результатов",
+      можно сделать вывод о точности методов, заключачающийся в том, что значения аппроксимации, полученной построением
+      полинома Лагранжа, более точные, чем значения, полученные сплайн-интерполяцией.
+
+\end{document}
