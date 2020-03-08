@@ -1,2 +1,3 @@
 *.gch
-*/Report
+*.out
+LAB*/Report
