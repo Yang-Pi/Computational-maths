@@ -1,3 +1,4 @@
 *.gch
 *.out
-LAB*/Report
+LAB?/Report/*
+!LAB?/Report/L?.tex
