@@ -58,7 +58,7 @@ escapeinside={\%*}{*)}   % если нужно добавить коммента
 %---------TITLE PAGE---------
 \title{Вычислительная математика \\ Лабораторная работа 2}
 \author{Ярослав Пылаев, гр. 3530904/80001}
-\date{\today}
+\date{March 31, 2020}
 
 \begin{document}
 \maketitle
@@ -79,7 +79,7 @@ escapeinside={\%*}{*)}   % если нужно добавить коммента
     0 & 7 & 6 & 0 & \text{--}5 & \text{--}8 & \text{--}5 & \text{--}3
   \end{pmatrix}
 \end{equation}
-Используя программу $\verb|DECOMP|$ и $\verb|SOLVE|$, вычислить обратные
+Используя программы $\verb|DECOMP|$ и $\verb|SOLVE|$, вычислить обратные
       матрицы $A^{-1} \hspace{2mm}(p = 1.0, 0.1, 0.01, 0.0001, 0.000001)$ и
       исследовать связь числа обусловленности ($cond$) и нормы матрицы невязки $R = E - AA^{-1}$.
 
@@ -95,7 +95,7 @@ escapeinside={\%*}{*)}   % если нужно добавить коммента
   \begin{itemize}
     \item используя программу $\verb|DECOMP|$, получить $LU$-разложение матрицы $(1)$ и
           значение ее числа обусловленности;
-    \item используя программу $\verb|SOLEVE|$, вычислить обратную матрицу;
+    \item используя программу $\verb|SOLVE|$, вычислить обратную матрицу;
     \item получить матрицу невязки и определить значение ее нормы.
   \end{itemize}
   \item По полученным результатам сделать вывод о связи числа обусловленности исходной матрицы
@@ -108,11 +108,11 @@ escapeinside={\%*}{*)}   % если нужно добавить коммента
   &AX = E, \hspace{5mm} X=A^{-1}, \hspace{3mm} x_k - k\text{-й столбец обратной матрицы}. \\
   &\underbrace{Ax_k = e_k}_{k=1,2,\dots,N}, \hspace{3mm} e_k - \text{$k$-й столбец единичной матрицы}.
 \end{align*}
-\textit{Однократно} вызывается программа \textit{DECOMP} и строится $LU$-разложение матрицы.
+\textit{Однократно} вызывается программа $\verb|DECOMP|$ и строится $LU$-разложение матрицы.
       Далее -- цикл по $k$ от $1$ до $N$:
 \begin{align*}
   &e_k \rightarrow B, \\
-  &SOLVE(\dots, A, B, \dots), \\
+  &\text{SOLVE}(\dots, A, B, \dots), \\
   &B \rightarrow \text{$k$-й столбец $A^{-1}$}.
 \end{align*}
 
@@ -256,7 +256,7 @@ int main()
 Норма матрицы $=$ $2.931 \cdot 10^{-14}$
 \subsubsection{Комментарии}
 \begin{itemize}
-  \item Норма матрицы расчитывается по формуле \[\parallel A \parallel = max_i \sum_{j=1}^n |a_{ij}|.\]
+  \item Норма матрицы рассчитывается по формуле \[\parallel A \parallel = max_i \sum_{j=1}^n |a_{ij}|.\]
   \item Для умножения матриц была написана функция $\verb|multiplyMatrices(...)|$, ее код приведен в соответствующем разделе ниже.
 \end{itemize}
 
@@ -324,7 +324,7 @@ int main()
     return 0;
   }
 \end{lstlisting}
-\begin{lstlisting}[label=multiplyMatrices, caption=Multiply Matrices]
+\begin{lstlisting}[label=multiplyMatrices, caption=Compute Norm]
   double computeNorm(const int rows, const int cols,
                      double *matrix)
   {

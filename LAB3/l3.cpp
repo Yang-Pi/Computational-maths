@@ -64,7 +64,7 @@ std::cout << "------------------------------------------------\n";
   //---compute all starting values
   arrValues[0] = startValue1;
   arrValues[1] = startValue2;
-
+  
   fun(N, t1, arrValues, fN); //compute f_n
 
   const double HINT = 2.5e-3;
@@ -88,8 +88,8 @@ std::cout << "------------------------------------------------\n";
     }
     t += HINT;
     fun(N, t, arrValues, fN);
-
-    std::cout << std::setw(7) << std::left << t << std::setw(10) << std::left << arrValues[0] << std::setw(10) << std::left << arrValues[1] << '\n';
+    if ((i+1) % 20 == 0)
+    std::cout << "$" << t  << "$ & $" << arrValues[0] << "$ & $" << arrValues[1] << "$ \\\\ \\hline \n";
   }
 //TASK2-----
 
@@ -117,8 +117,5 @@ int fun(int n, double t, double *arrValues, double *arrDxDt)
         return 1;
     }
   }
-
-  //std::cout << t << "   " << arrValues[0] << "   " << arrValues[1] << " ... " << arrDxDt[0] << "   " << arrDxDt[1] << '\n';
-
   return 0;
 }

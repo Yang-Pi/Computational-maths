@@ -1,0 +1,356 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{wrapfig}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{pgfplots}
+\usepackage{enumerate}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+%Russian-specific packages
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian, english]{babel}
+%--------------------------------------
+\usepackage{color} %% это для отображения цвета в коде
+\usepackage{listings} %% собственно, это и есть пакет listings
+\usepackage{caption}
+
+\DeclareCaptionFont{white}{\color{white}} %% это сделает текст заголовка белым
+%код ниже нарисует серую рамочку вокруг заголовка кода.
+\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+%--------------------------------------
+\definecolor{lemonchiffon}{rgb}{1.0, 0.98, 0.8}
+\newtcolorbox{mainblock}{colback=lemonchiffon,grow to right by=-10mm,grow to left by=-10mm,
+boxrule=0pt,boxsep=0pt,breakable} % настройки области с изменённым фоном
+%--------------------------------------
+\definecolor{block-gray}{gray}{0.95} % уровень прозрачности (1 - максимум)
+\newtcolorbox{importantblock}{colback=block-gray,grow to right by=-10mm,grow to left by=-10mm,
+boxrule=0pt,boxsep=0pt,breakable} % настройки области с изменённым фоном
+%--------------------------------------
+\makeatletter
+\newcommand{\settag}[1]{
+  \tag*{(#1)\qquad}
+  \edef\@currentlabel{\theequation#1}}
+\makeatother
+
+%---------code stuff-------------------
+\lstset{
+language=C++,                 % выбор языка для подсветки (здесь это С)
+basicstyle=\footnotesize\sffamily, % размер и начертание шрифта для подсветки кода
+numbers=left,               % где поставить нумерацию строк (слева\справа)
+numberstyle=\tiny,           % размер шрифта для номеров строк
+stepnumber=1,                   % размер шага между двумя номерами строк
+numbersep=5pt,                % как далеко отстоят номера строк от подсвечиваемого кода
+backgroundcolor=\color{white}, % цвет фона подсветки - используем \usepackage{color}
+showspaces=false,            % показывать или нет пробелы специальными отступами
+showstringspaces=false,      % показывать или нет пробелы в строках
+showtabs=false,             % показывать или нет табуляцию в строках
+frame=single,              % рисовать рамку вокруг кода
+tabsize=2,                 % размер табуляции по умолчанию равен 2 пробелам
+captionpos=t,              % позиция заголовка вверху [t] или внизу [b]
+breaklines=true,           % автоматически переносить строки (да\нет)
+breakatwhitespace=false, % переносить строки только если есть пробел
+escapeinside={\%*}{*)}   % если нужно добавить комментарии в коде
+}
+%--------------------------------------
+
+%---------TITLE PAGE---------
+\title{Вычислительная математика \\ Лабораторная работа 3}
+\author{Ярослав Пылаев, гр. 3530904/80001}
+\date{March 31, 2020}
+
+\begin{document}
+\maketitle
+\newpage
+
+\section{Задание}
+\noindent \textbf{Вариант 14.} Решить систему дифференциальных уравнений:
+  \begin{gather*}
+      \frac{dx_1}{dt} = -73x_1 - 210x_2 + ln(1 + t^2), \hspace{5mm}
+      \frac{dx_2}{dt} = x_1 + e^{-t} + t^2 + 1, \\
+    x_1(0) = -3, \hspace{3mm} x_2(0) = 1, \hspace{3mm} t \in [0; 1],
+  \end{gather*}
+  следующими способами с одним и тем же шагом печати $h_{print} = 0.05$:
+  \begin{enumerate}[I.]
+    \item по программе $\verb|RKF45|$ с $EPS = 0.0001$;
+    \item методом Адамса $2$-й степени точности: \[z_{n+1} = z_n + h(3f_n - f_{n-1}) / 2\]
+          с двумя постоянными шагами интегрирования:
+          \begin{itemize}
+            \item $h_{int} = 0.025$,
+            \item любой другой, позволяющий получить качественно верное решение.
+          \end{itemize}
+  \end{enumerate}
+
+  \noindent Сравнить результаты. Дополнительные начальные условия метода Адамса получить с помощью $\verb|RKF45|$.
+
+\subsection{Цель работы}
+\noindent Решить систему дифференциальных уравнений сначала по программе $\verb|RKF45|$, а затем методом
+      Адамса $2$-й степени точности (с двумя различными шагами интегрирования). Сравнить полученные результаты.
+
+\subsection{Задачи}
+\begin{enumerate}
+  \item Используя программу $\verb|RKF45|$, решить исходную систему дифференциальных уравнений.
+  \item Сделать расчет начальных условий для метода Адамса $2$-й степени точности.
+  \item Решить СДУ методом Адамса с шагами интегрирования
+    \begin{itemize}
+      \item $0.025$,
+      \item выбранный с учетом расчета критического шага метода.
+    \end{itemize}
+    \item Сравнить полученные результаты.
+\end{enumerate}
+\newpage
+
+\section{Реализация}
+\subsection{Инициализация}
+\begin{lstlisting}[label=start, caption=Starting values]
+  int main()
+  {
+    const double startValue1 = -3.0;
+    const double startValue2 = 1.0;
+    const int N = 2;
+    int fail = 0;
+    rkfinit(N, &fail); //RKFINIT()
+    if (fail) {
+      return 1;
+    }
+    //---other arguments for RKF45()
+    double arrValues[N] = {startValue1, startValue2};
+    double arrDxDt[N] = {0.0};
+    double t = 0.0;
+    double tOut = 0.0;
+    double relerr = 1.0e-4;
+    double abserr = 1.0e-4;
+    double h = 0.0;
+    int nfe = 0;
+    const int maxnfe = 5000; //take value from example
+    int flag = 1;
+    //---
+    ......................................................
+\end{lstlisting}
+
+\subsection{RKF45}
+\begin{lstlisting}[label=rkf45, caption=RKF45]
+    ......................................................
+    //compute number of iterations for the loop
+    const double HPRINT = 5.0e-2;
+    const double t1 = 0.0;
+    const double t2 = 1.0;
+    int nIter = static_cast<int>(abs((t2-t1)) / HPRINT);
+    for (int i = 0; i < nIter; ++i) {
+      tOut += HPRINT;
+      rkf45(fun, N, arrValues, arrDxDt, &t, tOut, &relerr,
+            abserr, &h, &nfe, maxnfe, &flag);
+    }
+    ......................................................
+\end{lstlisting}
+\newpage
+\subsubsection{Результаты}
+  $h_{print} = 0.05$ \\
+  \begin{center}
+    \begin{tabular}{ | c | c | c | }
+      \hline
+      %\footnotesize
+      $\textbf{t}$ & \bm{$x_1$} & \bm{$x_2$} \\ \hline
+      $0.05$ & $\text{-}2.78428$ & $0.95533$ \\ \hline
+      $0.1$ & $\text{-}2.66501$ & $0.91586$ \\ \hline
+      $0.15$ & $\text{-}2.55931$ & $0.88022$ \\ \hline
+      $0.2$ & $\text{-}2.46418$ & $0.84829$ \\ \hline
+      $0.25$ & $\text{-}2.379$ & $0.81963$ \\ \hline
+      $0.3$ & $\text{-}2.30346$ & $0.79438$ \\ \hline
+      $0.35$ & $\text{-}2.23712$ & $0.77232$ \\ \hline
+      $0.4$ & $\text{-}2.1797$ & $0.75335$ \\ \hline
+      $0.45$ & $\text{-}2.13087$ & $0.73736$ \\ \hline
+      $0.5$ & $\text{-}2.09039$ & $0.72425$ \\ \hline
+      $0.55$ & $\text{-}2.05799$ & $0.71395$ \\ \hline
+      $0.6$ & $\text{-}2.03349$ & $0.70637$ \\ \hline
+      $0.65$ & $\text{-}2.01665$ & $0.70146$ \\ \hline
+      $0.7$ & $\text{-}2.00733$ & $0.69914$ \\ \hline
+      $0.75$ & $\text{-}2.00533$ & $0.69937$ \\ \hline
+      $0.8$ & $\text{-}2.01052$ & $0.70208$ \\ \hline
+      $0.85$ & $\text{-}2.02276$ & $0.70723$ \\ \hline
+      $0.9$ & $\text{-}2.04192$ & $0.71478$ \\ \hline
+      $0.95$ & $\text{-}2.06788$ & $0.72469$ \\ \hline
+      $1$ & $\text{-}2.10053$ & $0.73691$ \\ \hline
+    \end{tabular} \\
+  \end{center}
+
+\subsection{Метод Адамса 2-й степени точности}
+\begin{equation*}
+  z_{n+1} = z_n + h(3f_n - f_{n-1}) / 2
+\end{equation*}
+\begin{lstlisting}[label=adams, caption=Adams (2) method (Linear multistep method)]
+    ......................................................
+    double fN[N] = {0.0}; //f_n
+    double fNm1[N] = {0.0}; //f_{n-1}
+
+  //---compute all starting values
+    arrValues[0] = startValue1;
+    arrValues[1] = startValue2;
+    fun(N, t1, arrValues, fN); //compute f_n
+    const double HINT = 2.5e-3; //change this value by int step
+
+    //we know x_1(0) and x_2(0) but also need x_1(0 - HINT) and
+          x_2(0 - HINT) as starting valuses for Adams method
+    tOut = t1 - HINT; //it's less than 0
+    t = t1; //it's 0
+    //tOut <-- t (not t --> tOut)
+    rkf45(fun, N, arrValues, arrDxDt, &t, tOut, &relerr,
+          abserr, &h, &nfe, maxnfe, &flag);
+    fun(N, t, arrValues, fNm1); //compute f_{n-1}
+  //---
+
+    nIter = static_cast<int>(abs((t2-t1)) / HINT);
+    t = t1;
+    for (int i = 0; i < nIter; ++i) {
+      for (int j = 0; j < N; ++j) {
+        arrValues[j] = arrValues[j] + 0.5 * HINT * (3 * fN[j] - fNm1[j]); //formula for the method
+        fNm1[j] = fN[j];
+      }
+      t += HINT;
+      fun(N, t, arrValues, fN);
+    }
+    rkfend();
+
+    return 0;
+  }
+\end{lstlisting}
+
+\subsubsection{Расчет критического шага}
+\begin{gather*}
+  \frac{dx_1}{dt} = -73x_1 - 210x_2 + ln(1 + t^2), \hspace{5mm}
+  \frac{dx_2}{dt} = x_1 + e^{-t} + t^2 + 1.
+\end{gather*}
+\begin{align*}
+  &\begin{pmatrix}
+    $\text{--}73$ & $\text{--}210$ \\
+    $1$ & 0
+   \end{pmatrix}, \hspace{5mm}
+   \lambda^2 + 73\lambda + 210 = 0, \hspace{5mm}
+   \begin{cases}
+     \lambda_1 = -3, \\
+     \lambda_2 = -70.
+   \end{cases} \\
+   &\text{При условии, что } h_{int}|\lambda_k| < 1, \bm{h_{int} < 0.01428571...} \\
+\end{align*}
+
+\subsubsection{Результаты}
+\begin{enumerate}[I.]
+  \item $h_{int} = 0.025$
+  \begin{center}
+    \begin{tabular}{ | c | c | c | }
+      \hline
+      %\footnotesize
+      $\textbf{t}$ & \bm{$x_1$} & \bm{$x_2$} \\ \hline
+      $0.025$ & $\text{-}3.48602$ & $1.00494$ \\ \hline
+      $0.05$ & $\text{-}1.96944$ & $0.96082$ \\ \hline
+      $0.075$ & $\text{-}4.68745$ & $0.97910$ \\ \hline
+      $0.1$ & $1.15922$ & $0.87602$ \\ \hline
+      $0.125$ & $\text{-}10.6197$ & $1.02572$ \\ \hline
+      $0.15$ & $13.7319$ & $0.66024$ \\ \hline
+      $0.175$ & $\text{-}36.0558$ & $1.35483$ \\ \hline
+      $0.2$ & $66.2421$ & $\text{-}0.12233$ \\ \hline
+      $0.225$ & $\text{-}143.476$ & $2.85877$ \\ \hline
+      $0.25$ & $286.902$ & $\text{-}3.30348$ \\ \hline
+      $\cdots$ & $\cdots$ & $\cdots$ \\ \hline
+    \end{tabular} \\
+  \end{center}
+  \noindent Наглядно видно, что при заданном шаге интегрирования получается качественно неверное решение.
+
+  \item Пусть $h_{int} = 0.0025$, тогда
+  \begin{align*}
+    &\begin{tabular}{ | c | c | c | }
+      \hline
+      %\footnotesize
+      $\textbf{t}$ & \bm{$x_1$} & \bm{$x_2$} \\ \hline
+      $0.0025$ & $-2.99958$ & $0.999666$ \\ \hline
+      $0.005$ & $-2.97693$ & $0.997158$ \\ \hline
+      $0.0075$ & $-2.95856$ & $0.994729$ \\ \hline
+      $0.01$ & $-2.94189$ & $0.992334$ \\ \hline
+      $0.0125$ & $-2.92686$ & $0.989972$ \\ \hline
+      $0.015$ & $-2.9132$ & $0.98764$ \\ \hline
+      $0.0175$ & $-2.90068$ & $0.985334$ \\ \hline
+      $0.02$ & $-2.88915$ & $0.983053$ \\ \hline
+      $0.0225$ & $-2.87843$ & $0.980793$ \\ \hline
+      $0.025$ & $-2.86842$ & $0.978553$ \\ \hline
+      $0.0275$ & $-2.859$ & $0.976331$ \\ \hline
+      $0.03$ & $-2.85008$ & $0.974127$ \\ \hline
+      $0.0325$ & $-2.84159$ & $0.971938$ \\ \hline
+      $0.035$ & $-2.83346$ & $0.969765$ \\ \hline
+      $0.0375$ & $-2.82565$ & $0.967606$ \\ \hline
+      $0.04$ & $-2.8181$ & $0.96546$ \\ \hline
+      $0.0425$ & $-2.81079$ & $0.963327$ \\ \hline
+      $0.045$ & $-2.80367$ & $0.961207$ \\ \hline
+      $0.0475$ & $-2.79672$ & $0.959099$ \\ \hline
+      $0.05$ & $-2.78992$ & $0.957003$ \\ \hline
+      $0.0525$ & $-2.78325$ & $0.954919$ \\ \hline
+      $0.055$ & $-2.77669$ & $0.952845$ \\ \hline
+      $0.0575$ & $-2.77024$ & $0.950783$ \\ \hline
+      $0.06$ & $-2.76387$ & $0.948731$ \\ \hline
+      $0.0625$ & $-2.75758$ & $0.94669$ \\ \hline
+      $0.065$ & $-2.75136$ & $0.94466$ \\ \hline
+      $0.0675$ & $-2.74521$ & $0.94264$ \\ \hline
+      $0.07$ & $-2.73911$ & $0.94063$ \\ \hline
+      $0.0725$ & $-2.73307$ & $0.938631$ \\ \hline
+      $0.075$ & $-2.72708$ & $0.936642$ \\ \hline
+      $\cdots$ & $\cdots$ & $\cdots$ \\ \hline
+    \end{tabular}
+    &\begin{tabular}{ | c | c | c | }
+      \hline
+      %\footnotesize
+      $\textbf{t}$ & \bm{$x_1$} & \bm{$x_2$} \\ \hline
+      $0.05$ & $-2.78992$ & $0.957003$ \\ \hline
+      $0.1$ & $-2.66935$ & $0.917293$ \\ \hline
+      $0.15$ & $-2.56302$ & $0.881451$ \\ \hline
+      $0.2$ & $-2.46734$ & $0.849254$ \\ \hline
+      $0.25$ & $-2.38174$ & $0.82054$ \\ \hline
+      $0.3$ & $-2.3058$ & $0.795166$ \\ \hline
+      $0.35$ & $-2.23914$ & $0.773002$ \\ \hline
+      $0.4$ & $-2.18143$ & $0.753934$ \\ \hline
+      $0.45$ & $-2.13236$ & $0.737858$ \\ \hline
+      $0.5$ & $-2.09167$ & $0.724681$ \\ \hline
+      $0.55$ & $-2.0591$ & $0.714318$ \\ \hline
+      $0.6$ & $-2.03443$ & $0.706692$ \\ \hline
+      $0.65$ & $-2.01747$ & $0.701734$ \\ \hline
+      $0.7$ & $-2.00802$ & $0.69938$ \\ \hline
+      $0.75$ & $-2.00593$ & $0.699572$ \\ \hline
+      $0.8$ & $-2.01104$ & $0.702256$ \\ \hline
+      $0.85$ & $-2.02321$ & $0.707385$ \\ \hline
+      $0.9$ & $-2.0423$ & $0.714913$ \\ \hline
+      $0.95$ & $-2.06821$ & $0.724799$ \\ \hline
+      $1$ & $-2.10081$ & $0.737004$ \\ \hline
+    \end{tabular}
+  \end{align*}
+  Теперь результаты нас удовлетворяют.
+\end{enumerate}
+\newpage
+\section{Вывод}
+В ходе выполнения лабораторной работы мы получили результаты решения системы дифференциальных уравнений, вычисленных, используя программу $\verb|RKF45|$ с шагом печати $0.05$, и по методу Адамса с шагом, удовлетворяющим критическому - $0.0025 < \frac{1}{70}$. Значения результатов оказались крайне близкими. Также убедились, что при шаге интегрирования больше критического решение является качественно неверным.
+
+\section{Приложение}
+\begin{lstlisting}[label=fun, caption=Function]
+  int fun(int n, double t, double *arrValues, double *arrDxDt)
+  {
+    for (int i = 0; i < n; ++i) {
+      switch (i)
+      {
+        //X_1 = arrValues[0], X_2 = arrValues[1]
+        case 0 :
+          arrDxDt[i] = (-73) * arrValues[0] - 210 * arrValues[1] + log(1 + pow(t, 2));
+          break;
+
+        case 1 :
+          arrDxDt[i] = arrValues[0] + exp(-t) + pow(t, 2) + 1;
+          break;
+
+        default:
+          std::cerr << "The number of ODE's is bigger than known count of equations!";
+          return 1;
+      }
+    }
+    return 0;
+  }
+\end{lstlisting}
+
+\end{document}
