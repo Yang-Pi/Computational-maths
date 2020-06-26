@@ -1,4 +1,4 @@
-# Computational-maths-labs
+# Computational-maths-practise
 Академический курс: [*Вычислительная математика*](https://github.com/Yang-Pi/Computational-maths-book/tree/master/computational-maths/pdf)
 
 ### Работа 1 - QUANC8, SPLINE & SEVAL
